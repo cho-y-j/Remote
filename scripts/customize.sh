@@ -111,11 +111,23 @@ fi
 echo ""
 echo "4. Copying custom Flutter UI..."
 
-# Copy simplified home page
-FLUTTER_PAGES="$RUSTDESK_DIR/flutter/lib/desktop/pages"
-if [ -d "$FLUTTER_PAGES" ] && [ -f "$CUSTOM_DIR/flutter/simple_home_page.dart" ]; then
-    cp "$CUSTOM_DIR/flutter/simple_home_page.dart" "$FLUTTER_PAGES/"
-    echo -e "${GREEN}✓ Simplified UI copied${NC}"
+# Copy all custom Flutter files
+FLUTTER_LIB="$RUSTDESK_DIR/flutter/lib"
+if [ -d "$FLUTTER_LIB" ]; then
+    mkdir -p "$FLUTTER_LIB/elderly"
+
+    # Copy elderly UI theme and components
+    if [ -f "$CUSTOM_DIR/flutter/elderly_ui_theme.dart" ]; then
+        cp "$CUSTOM_DIR/flutter/elderly_ui_theme.dart" "$FLUTTER_LIB/elderly/"
+    fi
+    if [ -f "$CUSTOM_DIR/flutter/elderly_home_wrapper.dart" ]; then
+        cp "$CUSTOM_DIR/flutter/elderly_home_wrapper.dart" "$FLUTTER_LIB/elderly/"
+    fi
+    if [ -f "$CUSTOM_DIR/flutter/simple_home_page.dart" ]; then
+        cp "$CUSTOM_DIR/flutter/simple_home_page.dart" "$FLUTTER_LIB/elderly/"
+    fi
+
+    echo -e "${GREEN}✓ Elderly-friendly UI files copied${NC}"
 fi
 
 echo ""

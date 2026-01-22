@@ -11,13 +11,14 @@ copyright = "Copyright © 2025 Remote Helper. All rights reserved."
 
 [server]
 # Custom rendezvous server address (your hbbs server)
-# Replace with your actual server domain or IP
-rendezvous_server = "your-server.example.com"
+# For local testing: localhost or your machine's IP
+# For production: your-server.example.com
+rendezvous_server = "localhost"
 # Public key for server authentication (generated when you run hbbs)
-# You'll need to replace this with the actual key from your server
-public_key = ""
+# Local test key (replace with production key for deployment)
+public_key = "EuqXn0Ag+1F3W66vpAbYYQRbQnhm7F+ZImuRwUoQQi4="
 # Relay server (usually same as rendezvous server)
-relay_server = "your-server.example.com"
+relay_server = "localhost"
 
 [ui]
 # Simplified mode for elderly users

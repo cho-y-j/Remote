@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # RustDesk ID/Rendezvous Server
   hbbs:
@@ -16,8 +14,6 @@ services:
     networks:
       - remote-network
     restart: unless-stopped
-    depends_on:
-      - postgres
 
   # RustDesk Relay Server
   hbbr:
@@ -31,28 +27,6 @@ services:
       - ./data:/root
     networks:
       - remote-network
-    restart: unless-stopped
-
-  # Spring Boot API Server
-  api:
-    build:
-      context: ../../backend
-      dockerfile: Dockerfile
-    container_name: remote-api
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/remote_control
-      - SPRING_DATASOURCE_USERNAME=remote_user
-      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-remote_password}
-      - SPRING_REDIS_HOST=redis
-      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-here}
-    networks:
-      - remote-network
-    depends_on:
-      - postgres
-      - redis
     restart: unless-stopped
 
   # PostgreSQL Database
