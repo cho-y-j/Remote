@@ -1,0 +1,64 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Rust
+rustdesk/target/
+**/*.rs.bk
+
+# Java/Gradle
+backend/build/
+backend/.gradle/
+backend/bin/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Flutter
+flutter/build/
+flutter/.dart_tool/
+flutter/.packages
+flutter/.flutter-plugins
+flutter/.flutter-plugins-dependencies
+
+# vcpkg
+vcpkg/buildtrees/
+vcpkg/downloads/
+vcpkg/installed/
+vcpkg/packages/
+
+# Docker
+infrastructure/docker/data/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Test coverage
+coverage/
+*.lcov
+
+# Node modules (if any web components)
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/

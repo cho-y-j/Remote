@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # RustDesk ID/Rendezvous Server
+  hbbs:
+    image: rustdesk/rustdesk-server:latest
+    container_name: hbbs
+    command: hbbs
+    ports:
+      - "21115:21115"
+      - "21116:21116"
+      - "21116:21116/udp"
+      - "21118:21118"
+    volumes:
+      - ./data:/root
+    networks:
+      - remote-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # RustDesk Relay Server
+  hbbr:
+    image: rustdesk/rustdesk-server:latest
+    container_name: hbbr
+    command: hbbr
+    ports:
+      - "21117:21117"
+      - "21119:21119"
+    volumes:
+      - ./data:/root
+    networks:
+      - remote-network
+    restart: unless-stopped
+
+  # Spring Boot API Server
+  api:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: remote-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/remote_control
+      - SPRING_DATASOURCE_USERNAME=remote_user
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-remote_password}
+      - SPRING_REDIS_HOST=redis
+      - JWT_SECRET=${JWT_SECRET:-your-256-bit-secret-key-here}
+    networks:
+      - remote-network
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: remote-postgres
+    environment:
+      - POSTGRES_DB=remote_control
+      - POSTGRES_USER=remote_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-remote_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - remote-network
+    restart: unless-stopped
+
+  # Redis for Session/Cache
+  redis:
+    image: redis:7-alpine
+    container_name: remote-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - remote-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+networks:
+  remote-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
