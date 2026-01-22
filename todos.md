@@ -1,6 +1,6 @@
 # Remote Control Service - 작업 현황 및 TODO
 
-> 최종 업데이트: 2026-01-22
+> 최종 업데이트: 2026-01-22 (세션 2)
 > 프로젝트: RustDesk 기반 원격 지원 서비스 (고령자 친화적 UX)
 
 ---
@@ -100,25 +100,21 @@ POST /api/v1/sessions/create - 세션 생성
 
 ## 현재 문제점 및 블로커
 
-### 클라이언트 빌드 실패
+### 클라이언트 빌드 - 재확인 필요
 
-**원인**: Flutter-Rust Bridge 코드 생성 실패
+**상태 업데이트 (세션 2)**:
+- `bridge_generated.rs` 파일 존재 확인됨 ✅
+- `flutter/lib/generated_bridge.dart` 파일 존재 확인됨 ✅
+- 빌드 테스트 필요 (cargo check --features flutter)
 
-```
-error[E0583]: file not found for module `bridge_generated`
-```
-
-**상세 원인**:
+**이전 이슈 (참고용)**:
 1. `cargo expand` 실행 시 C/C++ 의존성 컴파일 실패
 2. libyuv가 Homebrew에 없음 (vcpkg에는 있음)
 3. VCPKG_ROOT 설정해도 일부 패키지에서 SIGKILL 발생
 
-**시도한 해결책**:
-- [x] flutter_rust_bridge_codegen 설치 (v1.82.6)
-- [x] cargo-expand 설치
-- [x] opus Homebrew 설치
-- [x] VCPKG_ROOT 환경변수 설정
-- [ ] libyuv Homebrew 설치 불가 (패키지 없음)
+**권장 빌드 방법**:
+- Docker 빌드 (가장 안정적)
+- 또는 build.py 스크립트 사용
 
 ---
 
@@ -244,12 +240,12 @@ Password: admin123
 ## Git 커밋 히스토리
 
 ```
+40c602e Update rustdesk submodule with customizations
+b6ac75d Upload current work
+7ccab9f Add project status and TODO documentation
 91f42db Update web viewer proxy to use correct API port
 1a44dda Fix backend configuration for local development
 0bc3a4b Add web viewer for support staff (React + Vite)
-900158e Add elderly-friendly Flutter UI components
-a2c868a Phase 3: Client customization setup
-519bf21 Initial project setup - Phase 1 complete
 ```
 
 ---
@@ -264,8 +260,20 @@ a2c868a Phase 3: Client customization setup
 
 ## 다음 세션에서 할 일
 
-1. **서버 테스트**: 공식 RustDesk 또는 Docker 빌드로 연결 테스트
-2. **클라이언트 빌드 해결**: Docker 빌드 환경 또는 의존성 문제 해결
-3. **웹 뷰어 완성**: RustDesk WebSocket 연동 (실제 원격 제어)
+1. **클라이언트 빌드 테스트**: `cargo check --features flutter` 실행하여 실제 빌드 확인
+2. **웹 뷰어 테스트**: Docker 서비스 + Backend + Web Viewer 시작 후 테스트
+3. **서버 연결 테스트**: 공식 RustDesk 클라이언트로 자체 서버 연결 테스트
 4. **E2E 테스트**: 전체 플로우 테스트
 5. **AWS 배포**: 프로덕션 환경 구축
+
+### 서비스 시작 순서
+```bash
+# 1. Docker (hbbs, hbbr, DB)
+cd /Users/jojo/pro/Remote/infrastructure/docker && docker-compose up -d
+
+# 2. Backend (8081)
+cd /Users/jojo/pro/Remote/backend && ./gradlew bootRun
+
+# 3. Web Viewer (3000)
+cd /Users/jojo/pro/Remote/web-viewer && npm run dev
+```
