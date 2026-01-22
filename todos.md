@@ -1,6 +1,6 @@
 # Remote Control Service - 작업 현황 및 TODO
 
-> 최종 업데이트: 2026-01-22 (세션 3)
+> 최종 업데이트: 2026-01-23 (세션 4)
 > 프로젝트: RustDesk 기반 원격 지원 서비스 (고령자 친화적 UX)
 
 ---
@@ -98,40 +98,48 @@ POST /api/v1/sessions/create - 세션 생성
 
 ---
 
+## 세션 4 완료 작업 (2026-01-23)
+
+### macOS 클라이언트 ✅
+- Flutter 빌드 성공 (57.9MB)
+- 코드 서명 후 실행 성공
+- 로컬 서버 연결 성공
+
+### 웹 뷰어 업데이트 ✅
+- ConnectPage를 관리 대시보드로 변경
+- 앱 다운로드 링크 + 사용 가이드 추가
+
+### Android 빌드 ⚠️ (미완료)
+- Flutter APK 빌드는 성공
+- 하지만 Rust 네이티브 라이브러리(librustdesk.so) 미포함
+- 크로스 컴파일 필요 (vcpkg Android 빌드 또는 Docker)
+
 ## 현재 문제점 및 블로커
 
-### 클라이언트 빌드 - 재확인 필요
+### Android 빌드 - 크로스 컴파일 필요
 
-**상태 업데이트 (세션 2)**:
-- `bridge_generated.rs` 파일 존재 확인됨 ✅
-- `flutter/lib/generated_bridge.dart` 파일 존재 확인됨 ✅
-- 빌드 테스트 필요 (cargo check --features flutter)
+**원인**: Android용 Rust 네이티브 라이브러리 빌드 필요
 
-**이전 이슈 (참고용)**:
-1. `cargo expand` 실행 시 C/C++ 의존성 컴파일 실패
-2. libyuv가 Homebrew에 없음 (vcpkg에는 있음)
-3. VCPKG_ROOT 설정해도 일부 패키지에서 SIGKILL 발생
-
-**권장 빌드 방법**:
-- Docker 빌드 (가장 안정적)
-- 또는 build.py 스크립트 사용
+**해결 방법**:
+1. GitHub Actions 자동 빌드 (추천)
+2. Docker 빌드 환경 사용
+3. vcpkg Android 크로스 컴파일 (복잡)
 
 ---
 
 ## 다음 작업 (TODO)
 
-### 옵션 1: 공식 RustDesk로 서버 테스트 (권장 - 빠름)
+### 1. GitHub Actions 설정 (자동 빌드)
+- Windows, macOS, Linux, Android 자동 빌드
+- 릴리즈 자동 생성
 
-```bash
-# 1. 공식 RustDesk 다운로드
-# https://rustdesk.com/download
+### 2. AWS 서버 배포
+- hbbs/hbbr 서버 AWS에 배포
+- 외부 네트워크에서 연결 테스트
 
-# 2. 설정에서 서버 지정:
-#    ID 서버: localhost
-#    릴레이 서버: localhost
-#    공개키: EuqXn0Ag+1F3W66vpAbYYQRbQnhm7F+ZImuRwUoQQi4=
-
-# 3. 두 클라이언트로 연결 테스트
+### 3. 브랜딩 완성
+- 앱 이름, 아이콘 커스터마이징
+- 서버 주소 하드코딩
 ```
 
 ### 옵션 2: Docker로 빌드 (권장 - 안정적)
@@ -258,7 +266,7 @@ b6ac75d Upload current work
 
 ---
 
-## 완료된 작업 (세션 3)
+## 완료된 작업 (세션 4)
 
 - ✅ macOS 클라이언트 빌드 성공 (RustDesk.app)
 - ✅ 로컬 서버 연결 테스트 성공
