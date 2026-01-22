@@ -3,7 +3,7 @@ spring:
     name: remote-control-api
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/remote_control
+    url: jdbc:postgresql://localhost:5433/remote_control
     username: remote_user
     password: remote_password
     driver-class-name: org.postgresql.Driver
@@ -20,10 +20,10 @@ spring:
   data:
     redis:
       host: localhost
-      port: 6379
+      port: 6380
 
 server:
-  port: 8080
+  port: 8081
 
 jwt:
   secret: ${JWT_SECRET:your-256-bit-secret-key-for-jwt-signing-min-32-chars}
