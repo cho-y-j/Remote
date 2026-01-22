@@ -1,6 +1,6 @@
 # Remote Control Service - 작업 현황 및 TODO
 
-> 최종 업데이트: 2026-01-22 (세션 2)
+> 최종 업데이트: 2026-01-22 (세션 3)
 > 프로젝트: RustDesk 기반 원격 지원 서비스 (고령자 친화적 UX)
 
 ---
@@ -258,13 +258,19 @@ b6ac75d Upload current work
 
 ---
 
+## 완료된 작업 (세션 3)
+
+- ✅ macOS 클라이언트 빌드 성공 (RustDesk.app)
+- ✅ 로컬 서버 연결 테스트 성공
+- ✅ 웹 뷰어 관리 대시보드로 업데이트
+
 ## 다음 세션에서 할 일
 
-1. **클라이언트 빌드 테스트**: `cargo check --features flutter` 실행하여 실제 빌드 확인
-2. **웹 뷰어 테스트**: Docker 서비스 + Backend + Web Viewer 시작 후 테스트
-3. **서버 연결 테스트**: 공식 RustDesk 클라이언트로 자체 서버 연결 테스트
-4. **E2E 테스트**: 전체 플로우 테스트
-5. **AWS 배포**: 프로덕션 환경 구축
+1. **E2E 테스트**: 다른 기기(Windows/Android)에서 연결 테스트
+2. **Windows 빌드**: GitHub Actions 또는 Windows PC에서 빌드
+3. **Android 빌드**: Flutter Android 빌드
+4. **AWS 배포**: 프로덕션 서버 구축
+5. **브랜딩 완성**: 앱 이름/아이콘 커스터마이징
 
 ### 서비스 시작 순서
 ```bash
@@ -276,4 +282,12 @@ cd /Users/jojo/pro/Remote/backend && ./gradlew bootRun
 
 # 3. Web Viewer (3000)
 cd /Users/jojo/pro/Remote/web-viewer && npm run dev
+```
+
+### macOS 앱 실행
+```bash
+# 코드 서명 후 실행
+cd /Users/jojo/pro/Remote/rustdesk/flutter
+codesign --force --deep --sign - build/macos/Build/Products/Release/RustDesk.app
+open build/macos/Build/Products/Release/RustDesk.app
 ```
