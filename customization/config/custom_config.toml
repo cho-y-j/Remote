@@ -1,0 +1,54 @@
+# Remote Control Service - Custom Configuration
+# This file defines the customization settings for the RustDesk fork
+
+[branding]
+# Application name displayed to users
+app_name = "원격도우미"
+# macOS organization identifier
+org_id = "com.remote.helper"
+# Copyright notice
+copyright = "Copyright © 2025 Remote Helper. All rights reserved."
+
+[server]
+# Custom rendezvous server address (your hbbs server)
+# Replace with your actual server domain or IP
+rendezvous_server = "your-server.example.com"
+# Public key for server authentication (generated when you run hbbs)
+# You'll need to replace this with the actual key from your server
+public_key = ""
+# Relay server (usually same as rendezvous server)
+relay_server = "your-server.example.com"
+
+[ui]
+# Simplified mode for elderly users
+simplified_mode = true
+# Hide advanced settings
+hide_settings = true
+# Large font size
+large_font = true
+# Font scale multiplier (1.0 = normal, 1.5 = 50% larger)
+font_scale = 1.3
+# Primary color (hex)
+primary_color = "#4A90D9"
+# Show only essential features
+minimal_ui = true
+
+[features]
+# Disable features not needed for simple remote support
+file_transfer = false
+port_forwarding = false
+tcp_tunneling = false
+rdp_transfer = false
+# Enable only screen sharing and control
+screen_share = true
+remote_control = true
+clipboard_sync = true
+audio_call = true
+
+[security]
+# Auto-generate temporary passwords
+auto_password = true
+# Password validity in minutes (0 = until restart)
+password_validity = 30
+# Require confirmation for incoming connections
+require_confirmation = true
