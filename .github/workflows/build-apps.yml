@@ -9,7 +9,6 @@ on:
 env:
   FLUTTER_VERSION: "3.24.5"
   RUSTDESK_VERSION: "1.3.7"
-  RUST_VERSION: "1.75"
   CARGO_NDK_VERSION: "3.1.2"
   NDK_VERSION: "r27c"
 
@@ -40,10 +39,10 @@ jobs:
           java-version: '17'
 
       - name: Setup Rust
-        run: |
-          rustup install ${{ env.RUST_VERSION }}
-          rustup default ${{ env.RUST_VERSION }}
-          rustup target add aarch64-linux-android
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+          targets: aarch64-linux-android
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -63,23 +62,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             clang cmake curl gcc-multilib git g++ g++-multilib \
-            libclang-dev llvm-dev nasm ninja-build pkg-config tree wget
+            libclang-dev llvm-dev nasm ninja-build pkg-config
 
       - name: Install cargo-ndk
-        run: cargo install cargo-ndk --version ${{ env.CARGO_NDK_VERSION }}
-
-      - name: Generate FFI bridge
-        run: |
-          cd rustdesk-src
-          # Install flutter_rust_bridge_codegen
-          cargo install flutter_rust_bridge_codegen --version 1.80.1 --features uuid
-          # Generate bridge files
-          cd flutter
-          flutter pub get
-          cd ../
-          ~/.cargo/bin/flutter_rust_bridge_codegen \
-            --rust-input ./src/flutter_ffi.rs \
-            --dart-output ./flutter/lib/generated_bridge.dart
+        run: cargo install cargo-ndk
 
       - name: Build Rust library for Android
         env:
@@ -95,6 +81,7 @@ jobs:
       - name: Build Flutter Android APK
         run: |
           cd rustdesk-src/flutter
+          flutter pub get
           flutter build apk --release --target-platform android-arm64
 
       - name: Upload Android artifact
@@ -117,9 +104,9 @@ jobs:
           git submodule update --init --recursive
 
       - name: Setup Rust
-        run: |
-          rustup install ${{ env.RUST_VERSION }}
-          rustup default ${{ env.RUST_VERSION }}
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -135,17 +122,6 @@ jobs:
           $VCPKG_ROOT/bootstrap-vcpkg.sh
           $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom
 
-      - name: Generate FFI bridge
-        run: |
-          cd rustdesk-src
-          cargo install flutter_rust_bridge_codegen --version 1.80.1 --features uuid
-          cd flutter
-          flutter pub get
-          cd ../
-          ~/.cargo/bin/flutter_rust_bridge_codegen \
-            --rust-input ./src/flutter_ffi.rs \
-            --dart-output ./flutter/lib/generated_bridge.dart
-
       - name: Build Rust library
         run: |
           export VCPKG_ROOT="$HOME/vcpkg"
@@ -155,6 +131,7 @@ jobs:
       - name: Build Flutter macOS app
         run: |
           cd rustdesk-src/flutter
+          flutter pub get
           flutter build macos --release
 
       - name: Code sign and package
