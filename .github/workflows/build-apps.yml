@@ -8,14 +8,62 @@ on:
 
 env:
   FLUTTER_VERSION: "3.24.5"
+  BRIDGE_FLUTTER_VERSION: "3.22.3"
   RUSTDESK_VERSION: "1.3.7"
-  CARGO_NDK_VERSION: "3.1.2"
+  RUST_VERSION: "1.75"
   NDK_VERSION: "r27c"
 
 jobs:
+  # ==================== Generate Bridge ====================
+  generate-bridge:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Clone rustdesk
+        run: |
+          git clone --depth 1 --branch ${{ env.RUSTDESK_VERSION }} https://github.com/rustdesk/rustdesk.git .
+          git submodule update --init --recursive
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.BRIDGE_FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: Install flutter_rust_bridge_codegen
+        run: cargo install flutter_rust_bridge_codegen --version 1.80.1 --features uuid --locked
+
+      - name: Generate bridge
+        run: |
+          cd flutter
+          flutter pub get
+          cd ..
+          ~/.cargo/bin/flutter_rust_bridge_codegen \
+            --rust-input ./src/flutter_ffi.rs \
+            --dart-output ./flutter/lib/generated_bridge.dart \
+            --c-output ./flutter/macos/Runner/bridge_generated.h
+          cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
+
+      - name: Upload bridge artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridge-artifact
+          path: |
+            ./src/bridge_generated.rs
+            ./src/bridge_generated.io.rs
+            ./flutter/lib/generated_bridge.dart
+            ./flutter/lib/generated_bridge.freezed.dart
+            ./flutter/macos/Runner/bridge_generated.h
+            ./flutter/ios/Runner/bridge_generated.h
+
   # ==================== Android Build ====================
   build-android:
     runs-on: ubuntu-22.04
+    needs: [generate-bridge]
     steps:
       - name: Free up disk space
         run: |
@@ -23,14 +71,16 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/share/boost
 
-      - name: Checkout main repo
-        uses: actions/checkout@v4
-
       - name: Clone rustdesk
         run: |
-          git clone --depth 1 --branch ${{ env.RUSTDESK_VERSION }} https://github.com/rustdesk/rustdesk.git rustdesk-src
-          cd rustdesk-src
+          git clone --depth 1 --branch ${{ env.RUSTDESK_VERSION }} https://github.com/rustdesk/rustdesk.git .
           git submodule update --init --recursive
+
+      - name: Download bridge artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bridge-artifact
+          path: ./
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -41,7 +91,7 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@v1
         with:
-          toolchain: stable
+          toolchain: ${{ env.RUST_VERSION }}
           targets: aarch64-linux-android
 
       - name: Setup Flutter
@@ -72,7 +122,6 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
-          cd rustdesk-src
           cargo ndk --platform 21 --target aarch64-linux-android build --release --features flutter
 
           mkdir -p flutter/android/app/src/main/jniLibs/arm64-v8a
@@ -80,7 +129,7 @@ jobs:
 
       - name: Build Flutter Android APK
         run: |
-          cd rustdesk-src/flutter
+          cd flutter
           flutter pub get
           flutter build apk --release --target-platform android-arm64
 
@@ -88,25 +137,28 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: RemoteHelper-Android
-          path: rustdesk-src/flutter/build/app/outputs/flutter-apk/app-release.apk
+          path: flutter/build/app/outputs/flutter-apk/app-release.apk
 
   # ==================== macOS Build ====================
   build-macos:
     runs-on: macos-14
+    needs: [generate-bridge]
     steps:
-      - name: Checkout main repo
-        uses: actions/checkout@v4
-
       - name: Clone rustdesk
         run: |
-          git clone --depth 1 --branch ${{ env.RUSTDESK_VERSION }} https://github.com/rustdesk/rustdesk.git rustdesk-src
-          cd rustdesk-src
+          git clone --depth 1 --branch ${{ env.RUSTDESK_VERSION }} https://github.com/rustdesk/rustdesk.git .
           git submodule update --init --recursive
+
+      - name: Download bridge artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bridge-artifact
+          path: ./
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@v1
         with:
-          toolchain: stable
+          toolchain: ${{ env.RUST_VERSION }}
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -125,26 +177,25 @@ jobs:
       - name: Build Rust library
         run: |
           export VCPKG_ROOT="$HOME/vcpkg"
-          cd rustdesk-src
           cargo build --features flutter --release --lib
 
       - name: Build Flutter macOS app
         run: |
-          cd rustdesk-src/flutter
+          cd flutter
           flutter pub get
           flutter build macos --release
 
       - name: Code sign and package
         run: |
-          codesign --force --deep --sign - rustdesk-src/flutter/build/macos/Build/Products/Release/RustDesk.app
-          cd rustdesk-src/flutter/build/macos/Build/Products/Release
+          codesign --force --deep --sign - flutter/build/macos/Build/Products/Release/RustDesk.app
+          cd flutter/build/macos/Build/Products/Release
           zip -r RemoteHelper-macOS.zip RustDesk.app
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: RemoteHelper-macOS
-          path: rustdesk-src/flutter/build/macos/Build/Products/Release/RemoteHelper-macOS.zip
+          path: flutter/build/macos/Build/Products/Release/RemoteHelper-macOS.zip
 
   # ==================== Create Release ====================
   release:
