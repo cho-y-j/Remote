@@ -23,10 +23,19 @@ jobs:
           git clone --depth 1 --branch ${{ env.RUSTDESK_VERSION }} https://github.com/rustdesk/rustdesk.git .
           git submodule update --init --recursive
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang cmake curl gcc git g++ \
+            libclang-dev libgtk-3-dev llvm-dev \
+            nasm ninja-build pkg-config wget
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -36,6 +45,11 @@ jobs:
 
       - name: Install flutter_rust_bridge_codegen
         run: cargo install flutter_rust_bridge_codegen --version 1.80.1 --features uuid --locked
+
+      - name: Fix pubspec.yaml compatibility
+        run: |
+          # Downgrade extended_text for flutter_rust_bridge compatibility
+          sed -i 's/extended_text: ^14.0.0/extended_text: ^13.0.0/' flutter/pubspec.yaml || true
 
       - name: Generate bridge
         run: |
