@@ -5,129 +5,14 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version (e.g., 1.0.0)'
-        required: true
-        default: '1.0.0'
 
 env:
   FLUTTER_VERSION: "3.24.5"
-  RUST_VERSION: "1.75.0"
-  VCPKG_COMMIT_ID: "501db0f17ef6df184fcdbfbe0f87cde2313b6ab1"
 
 jobs:
-  # ==================== macOS Build ====================
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout main repo
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Setup Rust
-        uses: dtolnay/rust-action@stable
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
-
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
-
-      - name: Install vcpkg dependencies
-        run: |
-          cd rustdesk
-          vcpkg install libvpx libyuv opus aom
-
-      - name: Build Rust library
-        run: |
-          cd rustdesk
-          cargo build --features flutter --release --lib
-
-      - name: Build Flutter macOS app
-        run: |
-          cd rustdesk/flutter
-          flutter pub get
-          flutter build macos --release
-
-      - name: Code sign
-        run: |
-          codesign --force --deep --sign - rustdesk/flutter/build/macos/Build/Products/Release/RustDesk.app
-
-      - name: Create DMG
-        run: |
-          cd rustdesk/flutter/build/macos/Build/Products/Release
-          hdiutil create -volname "RemoteHelper" -srcfolder RustDesk.app -ov -format UDZO RemoteHelper-macOS.dmg
-
-      - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: RemoteHelper-macOS
-          path: rustdesk/flutter/build/macos/Build/Products/Release/RemoteHelper-macOS.dmg
-
-  # ==================== Windows Build ====================
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout main repo
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Setup Rust
-        uses: dtolnay/rust-action@stable
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
-
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
-
-      - name: Install vcpkg dependencies
-        run: |
-          cd rustdesk
-          vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
-
-      - name: Build Rust library
-        run: |
-          cd rustdesk
-          cargo build --features flutter --release --lib
-
-      - name: Build Flutter Windows app
-        run: |
-          cd rustdesk/flutter
-          flutter pub get
-          flutter build windows --release
-
-      - name: Create installer (optional - requires NSIS)
-        run: |
-          cd rustdesk/flutter/build/windows/x64/runner/Release
-          Compress-Archive -Path * -DestinationPath RemoteHelper-Windows.zip
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: RemoteHelper-Windows
-          path: rustdesk/flutter/build/windows/x64/runner/Release/RemoteHelper-Windows.zip
-
   # ==================== Android Build ====================
   build-android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
@@ -141,19 +26,15 @@ jobs:
           java-version: '17'
 
       - name: Setup Rust
-        uses: dtolnay/rust-action@stable
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-          targets: aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android
+        run: |
+          rustup default stable
+          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Setup NDK
         uses: nttld/setup-ndk@v1
@@ -162,40 +43,40 @@ jobs:
           ndk-version: r26b
           add-to-path: true
 
-      - name: Install cargo-ndk
-        run: cargo install cargo-ndk
-
-      - name: Setup vcpkg for Android
+      - name: Install dependencies
         run: |
-          git clone https://github.com/aspect-build/aspect-vcpkg-registry.git /tmp/vcpkg
-          cd /tmp/vcpkg && git checkout ${{ env.VCPKG_COMMIT_ID }} || true
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+          cargo install cargo-ndk
 
       - name: Build Rust library for Android
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
           cd rustdesk
-          cargo ndk -t arm64-v8a -t armeabi-v7a -t x86_64 build --features flutter --release --lib
+          # Build only arm64 for faster build
+          cargo ndk -t arm64-v8a build --features flutter --release --lib
+
+          # Copy library to jniLibs
+          mkdir -p flutter/android/app/src/main/jniLibs/arm64-v8a
+          cp target/aarch64-linux-android/release/liblibrustdesk.so flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
 
       - name: Build Flutter Android APK
         run: |
           cd rustdesk/flutter
           flutter pub get
-          flutter build apk --release
-
-      - name: Rename APK
-        run: |
-          mv rustdesk/flutter/build/app/outputs/flutter-apk/app-release.apk rustdesk/flutter/build/app/outputs/flutter-apk/RemoteHelper-Android.apk
+          flutter build apk --release --target-platform android-arm64
 
       - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
           name: RemoteHelper-Android
-          path: rustdesk/flutter/build/app/outputs/flutter-apk/RemoteHelper-Android.apk
+          path: rustdesk/flutter/build/app/outputs/flutter-apk/app-release.apk
 
-  # ==================== iOS Build ====================
-  build-ios:
-    runs-on: macos-latest
+  # ==================== macOS Build ====================
+  build-macos:
+    runs-on: macos-13
     steps:
       - name: Checkout main repo
         uses: actions/checkout@v4
@@ -203,10 +84,7 @@ jobs:
           submodules: recursive
 
       - name: Setup Rust
-        uses: dtolnay/rust-action@stable
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-          targets: aarch64-apple-ios
+        run: rustup default stable
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -214,55 +92,60 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
-
-      - name: Build Rust library for iOS
+      - name: Install vcpkg dependencies
         run: |
+          brew install nasm yasm
           cd rustdesk
-          cargo build --features flutter --release --target aarch64-apple-ios --lib
+          export VCPKG_ROOT="$HOME/vcpkg"
+          git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
+          $VCPKG_ROOT/bootstrap-vcpkg.sh
+          $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom
 
-      - name: Build Flutter iOS app (no codesign)
+      - name: Build Rust library
+        run: |
+          export VCPKG_ROOT="$HOME/vcpkg"
+          cd rustdesk
+          cargo build --features flutter --release --lib
+
+      - name: Build Flutter macOS app
         run: |
           cd rustdesk/flutter
           flutter pub get
-          flutter build ios --release --no-codesign
+          flutter build macos --release
 
-      - name: Create IPA
+      - name: Code sign and package
         run: |
-          cd rustdesk/flutter/build/ios/iphoneos
-          mkdir Payload
-          cp -r Runner.app Payload/
-          zip -r RemoteHelper-iOS.ipa Payload
+          codesign --force --deep --sign - rustdesk/flutter/build/macos/Build/Products/Release/RustDesk.app
+          cd rustdesk/flutter/build/macos/Build/Products/Release
+          zip -r RemoteHelper-macOS.zip RustDesk.app
 
-      - name: Upload iOS artifact
+      - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: RemoteHelper-iOS
-          path: rustdesk/flutter/build/ios/iphoneos/RemoteHelper-iOS.ipa
+          name: RemoteHelper-macOS
+          path: rustdesk/flutter/build/macos/Build/Products/Release/RemoteHelper-macOS.zip
 
   # ==================== Create Release ====================
   release:
-    needs: [build-macos, build-windows, build-android, build-ios]
+    needs: [build-android, build-macos]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
+      - name: List artifacts
+        run: find artifacts -type f
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/RemoteHelper-macOS/*
-            artifacts/RemoteHelper-Windows/*
             artifacts/RemoteHelper-Android/*
-            artifacts/RemoteHelper-iOS/*
+            artifacts/RemoteHelper-macOS/*
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
