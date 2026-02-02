@@ -59,6 +59,28 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes
 
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: remote-backend
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/remote_control
+      - SPRING_DATASOURCE_USERNAME=remote_user
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-remote_password}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - remote-network
+    restart: unless-stopped
+
 networks:
   remote-network:
     driver: bridge

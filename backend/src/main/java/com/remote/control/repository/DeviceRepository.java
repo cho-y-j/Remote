@@ -19,4 +19,9 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
     List<Device> findByUserAndIsOnlineTrue(User user);
 
     boolean existsByDeviceId(String deviceId);
+
+    // Alias for findByDeviceId (rustdeskId = deviceId)
+    default Optional<Device> findByRustdeskId(String rustdeskId) {
+        return findByDeviceId(rustdeskId);
+    }
 }
