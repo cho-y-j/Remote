@@ -19,7 +19,7 @@ jobs:
 
       - name: Checkout rustdesk submodule
         run: |
-          git submodule update --init rustdesk
+          git submodule update --init --recursive rustdesk
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -85,7 +85,7 @@ jobs:
 
       - name: Checkout rustdesk submodule
         run: |
-          git submodule update --init rustdesk
+          git submodule update --init --recursive rustdesk
 
       - name: Setup Rust
         run: rustup default stable
