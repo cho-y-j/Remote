@@ -8,95 +8,45 @@ on:
 
 env:
   FLUTTER_VERSION: "3.24.5"
-  BRIDGE_FLUTTER_VERSION: "3.22.3"
-  RUSTDESK_VERSION: "1.3.7"
-  RUST_VERSION: "1.86"
+  RUST_VERSION: "1.75"
+  CARGO_NDK_VERSION: "3.1.2"
   NDK_VERSION: "r27c"
+  VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
 
 jobs:
-  # ==================== Generate Bridge ====================
-  generate-bridge:
-    runs-on: ubuntu-22.04
+  # ==================== Android Build ====================
+  build-android:
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
         with:
-          submodules: recursive
+          tool-cache: false
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: false
 
-      - name: Use customized rustdesk
-        run: |
-          # Move customized rustdesk to root for build (excluding .git and .github)
-          shopt -s dotglob
-          for item in rustdesk/*; do
-            name=$(basename "$item")
-            if [[ "$name" != ".git" && "$name" != ".github" ]]; then
-              rm -rf "./$name" 2>/dev/null || true
-              mv "$item" .
-            fi
-          done
-          rm -rf rustdesk
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v6
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-      - name: Install system dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            clang cmake curl gcc git g++ \
-            libclang-dev libgtk-3-dev llvm-dev \
-            nasm ninja-build pkg-config wget
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-          components: rustfmt
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.BRIDGE_FLUTTER_VERSION }}
-          channel: 'stable'
-
-      - name: Install flutter_rust_bridge_codegen
-        run: cargo install flutter_rust_bridge_codegen --version 1.80.1 --features uuid --locked
-
-      - name: Fix pubspec.yaml compatibility
-        run: |
-          # Downgrade extended_text for flutter_rust_bridge compatibility
-          sed -i 's/extended_text: ^14.0.0/extended_text: ^13.0.0/' flutter/pubspec.yaml || true
-
-      - name: Generate bridge
-        run: |
-          cd flutter
-          flutter pub get
-          cd ..
-          ~/.cargo/bin/flutter_rust_bridge_codegen \
-            --rust-input ./src/flutter_ffi.rs \
-            --dart-output ./flutter/lib/generated_bridge.dart \
-            --c-output ./flutter/macos/Runner/bridge_generated.h
-          cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
-
-      - name: Upload bridge artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: bridge-artifact
-          path: |
-            ./src/bridge_generated.rs
-            ./src/bridge_generated.io.rs
-            ./flutter/lib/generated_bridge.dart
-            ./flutter/lib/generated_bridge.freezed.dart
-            ./flutter/macos/Runner/bridge_generated.h
-            ./flutter/ios/Runner/bridge_generated.h
-
-  # ==================== Android Build ====================
-  build-android:
-    runs-on: ubuntu-22.04
-    needs: [generate-bridge]
-    steps:
-      - name: Free up disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/boost
+            clang cmake curl gcc-multilib git g++ g++-multilib \
+            libayatana-appindicator3-dev libasound2-dev libc6-dev \
+            libclang-dev libunwind-dev libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev libgtk-3-dev libpam0g-dev \
+            libpulse-dev libva-dev libxcb-randr0-dev libxcb-shape0-dev \
+            libxcb-xfixes0-dev libxdo-dev libxfixes-dev llvm-dev \
+            nasm ninja-build openjdk-17-jdk-headless pkg-config tree wget
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -105,7 +55,6 @@ jobs:
 
       - name: Use customized rustdesk
         run: |
-          # Move customized rustdesk to root for build (excluding .git and .github)
           shopt -s dotglob
           for item in rustdesk/*; do
             name=$(basename "$item")
@@ -116,29 +65,11 @@ jobs:
           done
           rm -rf rustdesk
 
-      - name: Download bridge artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: bridge-artifact
-          path: ./
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-          targets: aarch64-linux-android
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          channel: "stable"
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
 
       - name: Setup NDK
         uses: nttld/setup-ndk@v1
@@ -147,27 +78,43 @@ jobs:
           ndk-version: ${{ env.NDK_VERSION }}
           add-to-path: true
 
-      - name: Install dependencies
+      - name: Setup vcpkg with Github Actions binary cache
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: /opt/artifacts/vcpkg
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          doNotCache: false
+
+      - name: Install vcpkg dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            clang cmake curl gcc-multilib git g++ g++-multilib \
-            libclang-dev llvm-dev nasm ninja-build pkg-config
+          if ! ./flutter/build_android_deps.sh "arm64-v8a"; then
+            find "${VCPKG_ROOT}/" -name "*.log" | while read -r _1; do
+              echo "$_1:"
+              cat "$_1"
+            done
+            exit 1
+          fi
 
-      - name: Install cargo-ndk
-        run: cargo install cargo-ndk
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: "rustfmt"
 
-      - name: Build Rust library for Android
+      - name: Build rustdesk lib
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
-          cargo ndk --platform 21 --target aarch64-linux-android build --release --features flutter
+          rustup target add aarch64-linux-android
+          cargo install cargo-ndk --version ${{ env.CARGO_NDK_VERSION }} --locked
+          ./flutter/ndk_arm64.sh
+          mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
+          cp ./target/aarch64-linux-android/release/liblibrustdesk.so ./flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
 
-          mkdir -p flutter/android/app/src/main/jniLibs/arm64-v8a
-          cp target/aarch64-linux-android/release/liblibrustdesk.so flutter/android/app/src/main/jniLibs/arm64-v8a/librustdesk.so
-
-      - name: Build Flutter Android APK
+      - name: Build Flutter APK
+        env:
+          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
         run: |
           cd flutter
           flutter pub get
@@ -179,80 +126,9 @@ jobs:
           name: RemoteHelper-Android
           path: flutter/build/app/outputs/flutter-apk/app-release.apk
 
-  # ==================== macOS Build ====================
-  build-macos:
-    runs-on: macos-14
-    needs: [generate-bridge]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Use customized rustdesk
-        run: |
-          # Move customized rustdesk to root for build (excluding .git and .github)
-          shopt -s dotglob
-          for item in rustdesk/*; do
-            name=$(basename "$item")
-            if [[ "$name" != ".git" && "$name" != ".github" ]]; then
-              rm -rf "./$name" 2>/dev/null || true
-              mv "$item" .
-            fi
-          done
-          rm -rf rustdesk
-
-      - name: Download bridge artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: bridge-artifact
-          path: ./
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
-
-      - name: Install vcpkg dependencies
-        run: |
-          brew install nasm yasm
-          export VCPKG_ROOT="$HOME/vcpkg"
-          git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
-          $VCPKG_ROOT/bootstrap-vcpkg.sh
-          $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom
-
-      - name: Build Rust library
-        run: |
-          export VCPKG_ROOT="$HOME/vcpkg"
-          cargo build --features flutter --release --lib
-
-      - name: Build Flutter macOS app
-        run: |
-          cd flutter
-          flutter pub get
-          flutter build macos --release
-
-      - name: Code sign and package
-        run: |
-          codesign --force --deep --sign - flutter/build/macos/Build/Products/Release/RustDesk.app
-          cd flutter/build/macos/Build/Products/Release
-          zip -r RemoteHelper-macOS.zip RustDesk.app
-
-      - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: RemoteHelper-macOS
-          path: flutter/build/macos/Build/Products/Release/RemoteHelper-macOS.zip
-
   # ==================== Create Release ====================
   release:
-    needs: [build-android, build-macos]
+    needs: [build-android]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
@@ -271,6 +147,5 @@ jobs:
         with:
           files: |
             artifacts/RemoteHelper-Android/*
-            artifacts/RemoteHelper-macOS/*
           draft: false
           prerelease: false
