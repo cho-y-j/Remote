@@ -5,6 +5,7 @@ services:
     container_name: hbbs
     command: hbbs
     ports:
+      - "21114:21114"
       - "21115:21115"
       - "21116:21116"
       - "21116:21116/udp"
