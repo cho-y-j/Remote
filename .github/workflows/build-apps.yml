@@ -25,9 +25,15 @@ jobs:
 
       - name: Use customized rustdesk
         run: |
-          # Move customized rustdesk to root for build
+          # Move customized rustdesk to root for build (excluding .git and .github)
           shopt -s dotglob
-          mv rustdesk/* .
+          for item in rustdesk/*; do
+            name=$(basename "$item")
+            if [[ "$name" != ".git" && "$name" != ".github" ]]; then
+              rm -rf "./$name" 2>/dev/null || true
+              mv "$item" .
+            fi
+          done
           rm -rf rustdesk
 
       - name: Install system dependencies
@@ -99,9 +105,15 @@ jobs:
 
       - name: Use customized rustdesk
         run: |
-          # Move customized rustdesk to root for build
+          # Move customized rustdesk to root for build (excluding .git and .github)
           shopt -s dotglob
-          mv rustdesk/* .
+          for item in rustdesk/*; do
+            name=$(basename "$item")
+            if [[ "$name" != ".git" && "$name" != ".github" ]]; then
+              rm -rf "./$name" 2>/dev/null || true
+              mv "$item" .
+            fi
+          done
           rm -rf rustdesk
 
       - name: Download bridge artifact
@@ -179,9 +191,15 @@ jobs:
 
       - name: Use customized rustdesk
         run: |
-          # Move customized rustdesk to root for build
+          # Move customized rustdesk to root for build (excluding .git and .github)
           shopt -s dotglob
-          mv rustdesk/* .
+          for item in rustdesk/*; do
+            name=$(basename "$item")
+            if [[ "$name" != ".git" && "$name" != ".github" ]]; then
+              rm -rf "./$name" 2>/dev/null || true
+              mv "$item" .
+            fi
+          done
           rm -rf rustdesk
 
       - name: Download bridge artifact

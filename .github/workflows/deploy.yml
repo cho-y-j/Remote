@@ -1,0 +1,53 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Stop the script if any command fails
+            set -e
+
+            echo "🚀 Starting deployment..."
+
+            # Navigate to project directory
+            # NOTE: You must clone the repository to this path on your EC2 instance first!
+            # e.g., git clone https://github.com/cho-y-j/Remote.git ~/Remote
+            TARGET_DIR="Remote"
+            
+            if [ -d "$TARGET_DIR" ]; then
+              cd "$TARGET_DIR"
+              echo "📂 Navigated to $TARGET_DIR"
+            else
+              echo "❌ Directory $TARGET_DIR does not exist. Please clone the repo first."
+              exit 1
+            fi
+
+            # Pull latest changes
+            echo "⬇️ Pulling latest changes..."
+            git pull origin main
+
+            # Restart services using Docker Compose
+            echo "🔄 Restarting services..."
+            cd infrastructure/docker
+            
+            # Shut down existing containers
+            docker-compose down
+            
+            # Start up containers with build to ensure new code is used
+            docker-compose up -d --build
+
+            # Clean up unused images to save disk space
+            docker image prune -f
+
+            echo "✅ Deployment successful!"
