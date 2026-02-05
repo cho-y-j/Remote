@@ -18,10 +18,17 @@ jobs:
   generate-bridge:
     runs-on: ubuntu-22.04
     steps:
-      - name: Clone rustdesk
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Use customized rustdesk
         run: |
-          git clone --depth 1 --branch ${{ env.RUSTDESK_VERSION }} https://github.com/rustdesk/rustdesk.git .
-          git submodule update --init --recursive
+          # Move customized rustdesk to root for build
+          shopt -s dotglob
+          mv rustdesk/* .
+          rm -rf rustdesk
 
       - name: Install system dependencies
         run: |
@@ -85,10 +92,17 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/share/boost
 
-      - name: Clone rustdesk
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Use customized rustdesk
         run: |
-          git clone --depth 1 --branch ${{ env.RUSTDESK_VERSION }} https://github.com/rustdesk/rustdesk.git .
-          git submodule update --init --recursive
+          # Move customized rustdesk to root for build
+          shopt -s dotglob
+          mv rustdesk/* .
+          rm -rf rustdesk
 
       - name: Download bridge artifact
         uses: actions/download-artifact@v4
@@ -158,10 +172,17 @@ jobs:
     runs-on: macos-14
     needs: [generate-bridge]
     steps:
-      - name: Clone rustdesk
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Use customized rustdesk
         run: |
-          git clone --depth 1 --branch ${{ env.RUSTDESK_VERSION }} https://github.com/rustdesk/rustdesk.git .
-          git submodule update --init --recursive
+          # Move customized rustdesk to root for build
+          shopt -s dotglob
+          mv rustdesk/* .
+          rm -rf rustdesk
 
       - name: Download bridge artifact
         uses: actions/download-artifact@v4
