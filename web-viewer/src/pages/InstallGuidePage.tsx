@@ -20,7 +20,7 @@ const InstallGuidePage: React.FC = () => {
           marginTop: '20px'
         }}>
           <a
-            href="/downloads/deskon-android.apk"
+            href="https://github.com/cho-y-j/Remote/releases/download/v1.0.0/DeskOn-Android.apk"
             style={{
               display: 'inline-block',
               padding: '15px 30px',
@@ -34,7 +34,7 @@ const InstallGuidePage: React.FC = () => {
             Android APK 다운로드
           </a>
           <a
-            href="/downloads/deskon-macos.dmg"
+            href="https://github.com/cho-y-j/Remote/releases/download/v1.0.0/DeskOn-macOS.dmg"
             style={{
               display: 'inline-block',
               padding: '15px 30px',
@@ -47,20 +47,21 @@ const InstallGuidePage: React.FC = () => {
           >
             macOS 다운로드
           </a>
-          <a
-            href="/downloads/deskon-windows.exe"
+          <span
             style={{
               display: 'inline-block',
               padding: '15px 30px',
-              backgroundColor: '#0078D4',
-              color: 'white',
+              backgroundColor: '#ccc',
+              color: '#666',
               textDecoration: 'none',
               borderRadius: '8px',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              cursor: 'not-allowed'
             }}
+            title="준비 중입니다"
           >
-            Windows 다운로드
-          </a>
+            Windows (준비중)
+          </span>
         </div>
       </section>
 
