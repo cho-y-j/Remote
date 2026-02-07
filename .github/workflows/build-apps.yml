@@ -310,9 +310,115 @@ jobs:
           name: RemoteHelper-Windows
           path: flutter/DeskOn-Windows.zip
 
+  # ==================== iOS Build ====================
+  build-ios:
+    needs: [generate-bridge]
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Use customized rustdesk
+        run: |
+          shopt -s dotglob
+          for item in rustdesk/*; do
+            name=$(basename "$item")
+            if [[ "$name" != ".git" && "$name" != ".github" ]]; then
+              rm -rf "./$name" 2>/dev/null || true
+              mv "$item" .
+            fi
+          done
+          rm -rf rustdesk
+
+      - name: Download bridge artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bridge-artifact
+          path: ./
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: aarch64-apple-ios
+          components: "rustfmt"
+
+      - name: Install dependencies
+        run: |
+          brew install nasm
+          cargo install cargo-lipo
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: /opt/vcpkg
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          doNotCache: false
+
+      - name: Install vcpkg dependencies
+        run: |
+          $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom --triplet arm64-ios
+
+      - name: Build Rust library for iOS
+        env:
+          VCPKG_ROOT: /opt/vcpkg
+        run: |
+          rustup target add aarch64-apple-ios
+          cargo build --release --target aarch64-apple-ios --features flutter
+
+      - name: Setup iOS signing
+        if: ${{ env.IOS_CERTIFICATE != '' }}
+        env:
+          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+        run: |
+          # Create keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate
+          echo "$IOS_CERTIFICATE" | base64 -d > $RUNNER_TEMP/certificate.p12
+          security import $RUNNER_TEMP/certificate.p12 -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # Install provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$IOS_PROVISIONING_PROFILE" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: Build Flutter iOS app
+        run: |
+          cd flutter
+          flutter pub get
+          flutter build ios --release --no-codesign
+
+      - name: Package iOS app
+        run: |
+          cd flutter/build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r ../../../DeskOn-iOS.ipa Payload
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RemoteHelper-iOS
+          path: flutter/DeskOn-iOS.ipa
+
   # ==================== Create Release ====================
   release:
-    needs: [build-android, build-windows]
+    needs: [build-android, build-windows, build-ios]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
@@ -332,5 +438,6 @@ jobs:
           files: |
             artifacts/RemoteHelper-Android/*
             artifacts/RemoteHelper-Windows/*
+            artifacts/RemoteHelper-iOS/*
           draft: false
           prerelease: false
