@@ -47,21 +47,20 @@ const InstallGuidePage: React.FC = () => {
           >
             macOS 다운로드
           </a>
-          <span
+          <a
+            href="https://github.com/cho-y-j/Remote/releases/download/v1.0.0/DeskOn-Windows.zip"
             style={{
               display: 'inline-block',
               padding: '15px 30px',
-              backgroundColor: '#ccc',
-              color: '#666',
+              backgroundColor: '#0078D4',
+              color: 'white',
               textDecoration: 'none',
               borderRadius: '8px',
-              fontWeight: 'bold',
-              cursor: 'not-allowed'
+              fontWeight: 'bold'
             }}
-            title="준비 중입니다"
           >
-            Windows (준비중)
-          </span>
+            Windows 다운로드
+          </a>
         </div>
       </section>
 
