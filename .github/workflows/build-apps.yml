@@ -223,9 +223,96 @@ jobs:
           name: RemoteHelper-Android
           path: flutter/build/app/outputs/flutter-apk/app-release.apk
 
+  # ==================== Windows Build ====================
+  build-windows:
+    needs: [generate-bridge]
+    runs-on: windows-2022
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Use customized rustdesk
+        shell: bash
+        run: |
+          shopt -s dotglob
+          for item in rustdesk/*; do
+            name=$(basename "$item")
+            if [[ "$name" != ".git" && "$name" != ".github" ]]; then
+              rm -rf "./$name" 2>/dev/null || true
+              mv "$item" .
+            fi
+          done
+          rm -rf rustdesk
+
+      - name: Download bridge artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bridge-artifact
+          path: ./
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: "rustfmt"
+
+      - name: Install LLVM
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "15.0"
+
+      - name: Install NASM
+        run: |
+          choco install nasm -y
+          echo "C:\Program Files\NASM" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Setup vcpkg with Github Actions binary cache
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: C:\vcpkg
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          doNotCache: false
+
+      - name: Install vcpkg dependencies
+        run: |
+          $env:VCPKG_DEFAULT_TRIPLET = "x64-windows-static"
+          vcpkg install libvpx libyuv opus aom
+
+      - name: Build Rust library
+        env:
+          LIBCLANG_PATH: ${{ env.LLVM_PATH }}/lib
+          VCPKG_ROOT: C:\vcpkg
+        run: |
+          cargo build --release --features flutter
+
+      - name: Build Flutter Windows app
+        run: |
+          cd flutter
+          flutter pub get
+          flutter build windows --release
+
+      - name: Package Windows app
+        run: |
+          cd flutter/build/windows/x64/runner/Release
+          7z a -tzip ../../../../../DeskOn-Windows.zip *
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RemoteHelper-Windows
+          path: flutter/DeskOn-Windows.zip
+
   # ==================== Create Release ====================
   release:
-    needs: [build-android]
+    needs: [build-android, build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
@@ -244,5 +331,6 @@ jobs:
         with:
           files: |
             artifacts/RemoteHelper-Android/*
+            artifacts/RemoteHelper-Windows/*
           draft: false
           prerelease: false
