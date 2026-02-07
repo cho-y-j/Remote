@@ -284,7 +284,7 @@ jobs:
       - name: Install vcpkg dependencies
         run: |
           $env:VCPKG_DEFAULT_TRIPLET = "x64-windows-static"
-          vcpkg install libvpx libyuv opus aom
+          vcpkg install --triplet x64-windows-static libvpx libyuv opus aom --classic
 
       - name: Build Rust library
         env:
