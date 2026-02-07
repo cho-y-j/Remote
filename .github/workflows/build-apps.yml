@@ -358,17 +358,17 @@ jobs:
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgDirectory: /opt/vcpkg
+          vcpkgDirectory: ${{ runner.temp }}/vcpkg
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
           doNotCache: false
 
       - name: Install vcpkg dependencies
         run: |
-          $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom --triplet arm64-ios
+          $VCPKG_ROOT/vcpkg install libvpx libyuv opus aom --triplet arm64-ios --classic
 
       - name: Build Rust library for iOS
         env:
-          VCPKG_ROOT: /opt/vcpkg
+          VCPKG_ROOT: ${{ runner.temp }}/vcpkg
         run: |
           rustup target add aarch64-apple-ios
           # Build for iOS arm64
