@@ -354,7 +354,6 @@ jobs:
       - name: Install dependencies
         run: |
           brew install nasm
-          cargo install cargo-lipo
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
@@ -372,7 +371,11 @@ jobs:
           VCPKG_ROOT: /opt/vcpkg
         run: |
           rustup target add aarch64-apple-ios
-          cargo build --release --target aarch64-apple-ios --features flutter
+          # Build for iOS arm64
+          cargo build --release --lib --target aarch64-apple-ios --features flutter
+          # Copy library to Flutter iOS directory
+          mkdir -p flutter/ios/Frameworks
+          cp target/aarch64-apple-ios/release/liblibrustdesk.a flutter/ios/Frameworks/ || true
 
       - name: Setup iOS signing
         if: ${{ env.IOS_CERTIFICATE != '' }}
