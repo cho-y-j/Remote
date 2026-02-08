@@ -61,6 +61,20 @@ const InstallGuidePage: React.FC = () => {
           >
             Windows 다운로드
           </a>
+          <a
+            href="https://github.com/cho-y-j/Remote/releases/download/v1.0.0/DeskOn-iOS.ipa"
+            style={{
+              display: 'inline-block',
+              padding: '15px 30px',
+              backgroundColor: '#000',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '8px',
+              fontWeight: 'bold'
+            }}
+          >
+            iOS 다운로드
+          </a>
         </div>
       </section>
 
