@@ -31,7 +31,7 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash")
     private String passwordHash;
 
     private String name;
@@ -40,6 +40,16 @@ public class User implements UserDetails {
     @Column(nullable = false)
     @Builder.Default
     private Role role = Role.USER;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private AuthProvider provider = AuthProvider.LOCAL;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Plan plan = Plan.FREE;
 
     @Builder.Default
     private Boolean enabled = true;
@@ -54,6 +64,14 @@ public class User implements UserDetails {
 
     public enum Role {
         USER, HELPER, ADMIN
+    }
+
+    public enum AuthProvider {
+        LOCAL, GOOGLE
+    }
+
+    public enum Plan {
+        FREE, PRO, ENTERPRISE
     }
 
     // UserDetails implementation

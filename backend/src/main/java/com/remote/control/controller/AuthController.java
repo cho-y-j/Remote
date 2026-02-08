@@ -2,6 +2,7 @@ package com.remote.control.controller;
 
 import com.remote.control.controller.dto.AuthRequest;
 import com.remote.control.controller.dto.AuthResponse;
+import com.remote.control.controller.dto.GoogleAuthRequest;
 import com.remote.control.controller.dto.RegisterRequest;
 import com.remote.control.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +30,12 @@ public class AuthController {
     @Operation(summary = "Login with email and password")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/google")
+    @Operation(summary = "Login or register with Google ID token")
+    public ResponseEntity<AuthResponse> googleLogin(@Valid @RequestBody GoogleAuthRequest request) {
+        return ResponseEntity.ok(authService.googleLogin(request.idToken()));
     }
 
     @PostMapping("/refresh")

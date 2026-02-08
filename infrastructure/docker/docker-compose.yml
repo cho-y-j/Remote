@@ -75,6 +75,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-remote_password}
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
     depends_on:
       - postgres
       - redis
@@ -94,8 +95,6 @@ services:
       - ./web-viewer-dist:/usr/share/nginx/html:ro
       - ./certbot/conf:/etc/letsencrypt:ro
       - ./certbot/www:/var/www/certbot:ro
-    depends_on:
-      - backend
     networks:
       - remote-network
     restart: unless-stopped
