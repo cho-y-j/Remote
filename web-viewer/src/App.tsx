@@ -14,10 +14,11 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<InstallGuidePage />} />
       <Route path="/guide" element={<InstallGuidePage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <PrivateRoute>
             <Layout />
