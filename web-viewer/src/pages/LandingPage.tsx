@@ -173,7 +173,7 @@ export default function LandingPage() {
                 로그인
               </button>
               <a
-                href="#pricing"
+                href="/signup"
                 className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-primary-600 text-white text-sm font-semibold shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 transition-all hover:-translate-y-0.5"
               >
                 무료로 시작
@@ -425,15 +425,16 @@ export default function LandingPage() {
                   )}
                 </div>
 
-                <button
-                  className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
+                <a
+                  href={plan.name === 'Enterprise' ? '#contact' : '/signup'}
+                  className={`block w-full py-3 rounded-xl font-semibold text-sm transition-all text-center ${
                     plan.highlight
                       ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 hover:-translate-y-0.5'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {plan.cta}
-                </button>
+                </a>
 
                 <div className="mt-8 space-y-3">
                   {plan.features.map((f, fi) => (
@@ -473,7 +474,7 @@ export default function LandingPage() {
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="#pricing"
+              href="/signup"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white text-primary-600 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all hover:-translate-y-1"
             >
               무료로 시작하기
