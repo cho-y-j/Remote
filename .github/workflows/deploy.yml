@@ -18,36 +18,53 @@ jobs:
             # Stop the script if any command fails
             set -e
 
-            echo "🚀 Starting deployment..."
+            echo "Starting deployment..."
 
             # Navigate to project directory
-            # NOTE: You must clone the repository to this path on your EC2 instance first!
-            # e.g., git clone https://github.com/cho-y-j/Remote.git ~/Remote
             TARGET_DIR="Remote"
-            
+
             if [ -d "$TARGET_DIR" ]; then
               cd "$TARGET_DIR"
-              echo "📂 Navigated to $TARGET_DIR"
+              echo "Navigated to $TARGET_DIR"
             else
-              echo "❌ Directory $TARGET_DIR does not exist. Please clone the repo first."
+              echo "Directory $TARGET_DIR does not exist. Please clone the repo first."
               exit 1
             fi
 
             # Pull latest changes
-            echo "⬇️ Pulling latest changes..."
+            echo "Pulling latest changes..."
             git pull origin main
 
+            # Build web-viewer
+            echo "Building web-viewer..."
+            cd web-viewer
+            npm install --production=false
+            npm run build
+            cd ..
+
+            # Copy build output to nginx serving directory
+            echo "Copying web-viewer build to nginx serving directory..."
+            mkdir -p infrastructure/docker/web-viewer-dist
+            rm -rf infrastructure/docker/web-viewer-dist/*
+            cp -r web-viewer/dist/* infrastructure/docker/web-viewer-dist/
+
             # Restart services using Docker Compose
-            echo "🔄 Restarting services..."
+            echo "Restarting services..."
             cd infrastructure/docker
-            
+
+            # First-time SSL setup if certificates don't exist
+            if [ ! -d "certbot/conf/live/desk.on1.kr" ]; then
+              echo "SSL certificates not found. Running initial setup..."
+              bash init-letsencrypt.sh
+            fi
+
             # Shut down existing containers
-            docker-compose down
-            
+            docker compose down
+
             # Start up containers with build to ensure new code is used
-            docker-compose up -d --build
+            docker compose up -d --build
 
             # Clean up unused images to save disk space
             docker image prune -f
 
-            echo "✅ Deployment successful!"
+            echo "Deployment successful!"
