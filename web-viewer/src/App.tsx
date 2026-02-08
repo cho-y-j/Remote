@@ -6,6 +6,8 @@ import SignupPage from './pages/SignupPage'
 import DashboardPage from './pages/DashboardPage'
 import ConnectPage from './pages/ConnectPage'
 import InstallGuidePage from './pages/InstallGuidePage'
+import PricingPage from './pages/PricingPage'
+import AdminPage from './pages/AdminPage'
 import Layout from './components/Layout'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -18,8 +20,17 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/guide" element={<InstallGuidePage />} />
+      <Route path="/pricing" element={<PricingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route
+        path="/admin"
+        element={
+          <PrivateRoute>
+            <AdminPage />
+          </PrivateRoute>
+        }
+      />
       <Route
         path="/dashboard"
         element={
