@@ -59,6 +59,10 @@ spring:
   datasource:
     url: jdbc:postgresql://postgres:5432/remote_control
 
+  jpa:
+    hibernate:
+      ddl-auto: update
+
   data:
     redis:
       host: redis
