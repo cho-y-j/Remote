@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './services/authStore'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
 import DashboardPage from './pages/DashboardPage'
 import ConnectPage from './pages/ConnectPage'
 import InstallGuidePage from './pages/InstallGuidePage'
@@ -18,6 +19,7 @@ export default function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/guide" element={<InstallGuidePage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route
         path="/dashboard"
         element={

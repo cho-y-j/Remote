@@ -52,12 +52,25 @@ export interface SessionResponse {
   durationSeconds: number | null
 }
 
+export interface RegisterRequest {
+  email: string
+  password: string
+  name: string
+}
+
+export interface GoogleAuthRequest {
+  idToken: string
+}
+
 export const authApi = {
   login: (data: LoginRequest) =>
     api.post<AuthResponse>('/auth/login', data),
 
-  register: (data: LoginRequest & { name: string }) =>
+  register: (data: RegisterRequest) =>
     api.post<AuthResponse>('/auth/register', data),
+
+  googleLogin: (data: GoogleAuthRequest) =>
+    api.post<AuthResponse>('/auth/google', data),
 }
 
 export const sessionApi = {

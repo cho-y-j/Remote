@@ -3,25 +3,14 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../services/authStore'
 import { authApi } from '../services/api'
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void
-          renderButton: (element: HTMLElement, config: any) => void
-        }
-      }
-    }
-  }
-}
-
-export default function LoginPage() {
+export default function SignupPage() {
   const navigate = useNavigate()
   const login = useAuthStore((state) => state.login)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -36,11 +25,11 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const result = await authApi.googleLogin({ idToken: response.credential })
-      const { accessToken, email: userEmail, name } = result.data
-      login(userEmail, name || '', accessToken)
+      const { accessToken, email: userEmail, name: userName } = result.data
+      login(userEmail, userName || '', accessToken)
       navigate('/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Google 로그인에 실패했습니다')
+      setError(err.response?.data?.message || 'Google 가입에 실패했습니다')
     } finally {
       setLoading(false)
     }
@@ -55,13 +44,13 @@ export default function LoginPage() {
       callback: handleGoogleResponse,
     })
 
-    const btnEl = document.getElementById('google-signin-btn')
+    const btnEl = document.getElementById('google-signup-btn')
     if (btnEl) {
       window.google.accounts.id.renderButton(btnEl, {
         theme: 'outline',
         size: 'large',
         width: '100%',
-        text: 'signin_with',
+        text: 'signup_with',
         shape: 'rectangular',
         logo_alignment: 'left',
       })
@@ -71,15 +60,31 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (password !== confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다')
+      return
+    }
+
+    if (password.length < 8) {
+      setError('비밀번호는 8자 이상이어야 합니다')
+      return
+    }
+
     setLoading(true)
 
     try {
-      const response = await authApi.login({ email, password })
-      const { accessToken, email: userEmail, name } = response.data
-      login(userEmail, name || '', accessToken)
+      const response = await authApi.register({ email, password, name })
+      const { accessToken, email: userEmail, name: userName } = response.data
+      login(userEmail, userName || '', accessToken)
       navigate('/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.message || '로그인에 실패했습니다')
+      const msg = err.response?.data?.message
+      if (msg?.includes('already registered')) {
+        setError('이미 가입된 이메일입니다. 로그인해주세요.')
+      } else {
+        setError(msg || '회원가입에 실패했습니다')
+      }
     } finally {
       setLoading(false)
     }
@@ -108,8 +113,8 @@ export default function LoginPage() {
           <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 ring-1 ring-gray-100 overflow-hidden">
             <div className="px-8 pt-10 pb-8">
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">로그인</h1>
-                <p className="mt-2 text-sm text-gray-500">DeskOn 계정으로 로그인하세요</p>
+                <h1 className="text-2xl font-bold text-gray-900">무료 회원가입</h1>
+                <p className="mt-2 text-sm text-gray-500">DeskOn으로 원격 데스크톱을 시작하세요</p>
               </div>
 
               {error && (
@@ -121,9 +126,9 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {/* Google Sign-In */}
+              {/* Google Sign-Up */}
               <div className="mb-6">
-                <div id="google-signin-btn" className="flex justify-center"></div>
+                <div id="google-signup-btn" className="flex justify-center"></div>
                 {!import.meta.env.VITE_GOOGLE_CLIENT_ID && (
                   <button
                     type="button"
@@ -136,7 +141,7 @@ export default function LoginPage() {
                       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
-                    Google로 로그인 (설정 필요)
+                    Google로 가입 (설정 필요)
                   </button>
                 )}
               </div>
@@ -147,12 +152,24 @@ export default function LoginPage() {
                   <div className="w-full border-t border-gray-200"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-400">또는 이메일로 로그인</span>
+                  <span className="px-4 bg-white text-gray-400">또는 이메일로 가입</span>
                 </div>
               </div>
 
-              {/* Email/Password Form */}
-              <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Registration Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">이름</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="appearance-none block w-full px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                    placeholder="홍길동"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">이메일</label>
                   <input
@@ -173,14 +190,26 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="appearance-none block w-full px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
-                    placeholder="••••••••"
+                    placeholder="8자 이상 입력"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">비밀번호 확인</label>
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="appearance-none block w-full px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all text-sm"
+                    placeholder="비밀번호 재입력"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-6"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
@@ -188,19 +217,34 @@ export default function LoginPage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      로그인 중...
+                      가입 중...
                     </span>
-                  ) : '로그인'}
+                  ) : '무료로 시작하기'}
                 </button>
               </form>
+
+              {/* Free plan info */}
+              <div className="mt-6 bg-primary-50/50 rounded-xl p-4 ring-1 ring-primary-100">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-primary-900">무료 플랜 포함</p>
+                    <p className="text-xs text-primary-700 mt-0.5">P2P 원격 연결, 기기 2대, 동시 1세션</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Footer */}
             <div className="px-8 py-5 bg-gray-50/80 border-t border-gray-100 text-center">
               <p className="text-sm text-gray-500">
-                아직 계정이 없으신가요?{' '}
-                <Link to="/signup" className="font-semibold text-primary-600 hover:text-primary-700 transition-colors">
-                  무료 회원가입
+                이미 계정이 있으신가요?{' '}
+                <Link to="/login" className="font-semibold text-primary-600 hover:text-primary-700 transition-colors">
+                  로그인
                 </Link>
               </p>
             </div>
@@ -208,7 +252,7 @@ export default function LoginPage() {
 
           {/* Bottom text */}
           <p className="mt-8 text-center text-xs text-gray-400">
-            로그인 시{' '}
+            가입 시{' '}
             <a href="#" className="underline hover:text-gray-500">이용약관</a>
             {' '}및{' '}
             <a href="#" className="underline hover:text-gray-500">개인정보처리방침</a>
