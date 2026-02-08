@@ -25,8 +25,8 @@ export default function SignupPage() {
     setLoading(true)
     try {
       const result = await authApi.googleLogin({ idToken: response.credential })
-      const { accessToken, email: userEmail, name: userName } = result.data
-      login(userEmail, userName || '', accessToken)
+      const { accessToken, email: userEmail, name: userName, plan } = result.data
+      login(userEmail, userName || '', accessToken, plan || 'FREE')
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.message || 'Google 가입에 실패했습니다')
@@ -75,8 +75,8 @@ export default function SignupPage() {
 
     try {
       const response = await authApi.register({ email, password, name })
-      const { accessToken, email: userEmail, name: userName } = response.data
-      login(userEmail, userName || '', accessToken)
+      const { accessToken, email: userEmail, name: userName, plan } = response.data
+      login(userEmail, userName || '', accessToken, plan || 'FREE')
       navigate('/dashboard')
     } catch (err: any) {
       const msg = err.response?.data?.message
@@ -233,7 +233,7 @@ export default function SignupPage() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-primary-900">무료 플랜 포함</p>
-                    <p className="text-xs text-primary-700 mt-0.5">P2P 원격 연결, 기기 2대, 동시 1세션</p>
+                    <p className="text-xs text-primary-700 mt-0.5">모든 기능 체험 — P2P 연결, 기기 3대, 세션당 1시간</p>
                   </div>
                 </div>
               </div>

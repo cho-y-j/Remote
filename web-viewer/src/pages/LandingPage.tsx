@@ -75,16 +75,19 @@ const plans = [
     name: 'Free',
     price: '0',
     period: '영구 무료',
-    desc: '개인 사용자를 위한 기본 플랜',
+    desc: '모든 기능을 무료로 체험하세요',
     features: [
       'P2P 직접 연결',
       '화면 공유 및 원격 제어',
-      '기본 파일 전송',
-      '최대 2대 기기 등록',
+      '파일 전송',
+      '음성 통화',
+      '최대 3대 기기 등록',
+      '동시 접속 1세션',
     ],
     limitations: [
+      '세션당 1시간 제한',
       '릴레이 서버 미지원',
-      '동시 접속 1세션',
+      '광고 표시',
     ],
     cta: '무료로 시작하기',
     highlight: false,
@@ -93,16 +96,18 @@ const plans = [
   },
   {
     name: 'Pro',
-    price: '9,900',
+    price: '5,900',
     period: '월',
-    desc: '전문가 및 소규모 팀을 위한 플랜',
+    desc: '제한 없는 원격 데스크톱',
     features: [
       'P2P + 릴레이 서버 연결',
       '화면 공유 및 원격 제어',
       '고속 파일 전송 (무제한)',
       '음성 통화',
+      '세션 시간 무제한',
       '최대 10대 기기 등록',
       '동시 접속 3세션',
+      '광고 없음',
       '우선 기술 지원',
     ],
     limitations: [],
@@ -112,22 +117,21 @@ const plans = [
     border: 'border-primary-200',
   },
   {
-    name: 'Enterprise',
-    price: '별도 문의',
-    period: '',
-    desc: '대규모 조직을 위한 맞춤 플랜',
+    name: 'Business',
+    price: '12,900',
+    period: '월',
+    desc: '팀과 기업을 위한 관리형 플랜',
     features: [
       'Pro 플랜의 모든 기능',
-      '전용 릴레이 서버 구축',
-      '무제한 기기 등록',
-      '무제한 동시 접속',
+      '기기 무제한 등록',
+      '동시 접속 10세션',
       '관리자 대시보드',
-      'SSO / LDAP 연동',
-      '전담 기술 매니저',
-      'SLA 보장',
+      '팀원 관리',
+      '연결 로그 / 리포트',
+      '전담 기술 지원',
     ],
     limitations: [],
-    cta: '문의하기',
+    cta: '비즈니스 시작하기',
     highlight: false,
     gradient: '',
     border: 'border-gray-200',
@@ -374,7 +378,7 @@ export default function LandingPage() {
                 }`}
               >
                 연간 결제
-                <span className="ml-1.5 text-xs font-bold text-emerald-500">-20%</span>
+                <span className="ml-1.5 text-xs font-bold text-emerald-500">2개월 무료</span>
               </button>
             </div>
           </div>
@@ -411,7 +415,7 @@ export default function LandingPage() {
                         {plan.price === '0'
                           ? '무료'
                           : `₩${billingPeriod === 'yearly'
-                              ? (parseInt(plan.price.replace(',', '')) * 0.8).toLocaleString()
+                              ? Math.round(parseInt(plan.price.replace(',', '')) * 10 / 12).toLocaleString()
                               : plan.price
                             }`}
                       </span>
@@ -420,13 +424,13 @@ export default function LandingPage() {
                       )}
                     </div>
                   )}
-                  {plan.price !== '0' && plan.price !== '별도 문의' && billingPeriod === 'yearly' && (
-                    <p className="text-sm text-emerald-600 font-medium mt-1">연간 결제 시 20% 할인</p>
+                  {plan.price !== '0' && billingPeriod === 'yearly' && (
+                    <p className="text-sm text-emerald-600 font-medium mt-1">연간 결제 시 2개월 무료</p>
                   )}
                 </div>
 
                 <a
-                  href={plan.name === 'Enterprise' ? '#contact' : '/signup'}
+                  href="/signup"
                   className={`block w-full py-3 rounded-xl font-semibold text-sm transition-all text-center ${
                     plan.highlight
                       ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 hover:-translate-y-0.5'

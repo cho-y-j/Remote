@@ -20,16 +20,24 @@ public class DeviceService {
 
     private final DeviceRepository deviceRepository;
     private final UserRepository userRepository;
+    private final PlanLimitService planLimitService;
 
     @Transactional
     public DeviceResponse registerDevice(DeviceRegisterRequest request, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        Device device = deviceRepository.findByDeviceId(request.deviceId())
-                .orElse(Device.builder()
-                        .deviceId(request.deviceId())
-                        .build());
+        // Check plan device limit for new devices
+        Device device = deviceRepository.findByDeviceId(request.deviceId()).orElse(null);
+        if (device == null) {
+            int currentCount = deviceRepository.findByUser(user).size();
+            int maxDevices = planLimitService.getMaxDevices(user.getPlan());
+            if (currentCount >= maxDevices) {
+                throw new IllegalStateException(
+                        "기기 등록 한도 초과 (최대 " + maxDevices + "대). 업그레이드가 필요합니다.");
+            }
+            device = Device.builder().deviceId(request.deviceId()).build();
+        }
 
         device.setUser(user);
         device.setName(request.name());

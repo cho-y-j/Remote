@@ -57,7 +57,7 @@ public class AuthService {
         String accessToken = tokenProvider.generateAccessToken(user.getEmail());
         String refreshToken = tokenProvider.generateRefreshToken(user.getEmail());
 
-        return new AuthResponse(accessToken, refreshToken, user.getEmail(), user.getName());
+        return new AuthResponse(accessToken, refreshToken, user.getEmail(), user.getName(), user.getPlan().name());
     }
 
     public AuthResponse login(AuthRequest request) {
@@ -71,7 +71,7 @@ public class AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        return new AuthResponse(accessToken, refreshToken, user.getEmail(), user.getName());
+        return new AuthResponse(accessToken, refreshToken, user.getEmail(), user.getName(), user.getPlan().name());
     }
 
     @Transactional
@@ -118,7 +118,7 @@ public class AuthService {
             String accessToken = tokenProvider.generateAccessToken(user.getEmail());
             String refreshToken = tokenProvider.generateRefreshToken(user.getEmail());
 
-            return new AuthResponse(accessToken, refreshToken, user.getEmail(), user.getName());
+            return new AuthResponse(accessToken, refreshToken, user.getEmail(), user.getName(), user.getPlan().name());
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
@@ -139,6 +139,6 @@ public class AuthService {
         String newAccessToken = tokenProvider.generateAccessToken(email);
         String newRefreshToken = tokenProvider.generateRefreshToken(email);
 
-        return new AuthResponse(newAccessToken, newRefreshToken, user.getEmail(), user.getName());
+        return new AuthResponse(newAccessToken, newRefreshToken, user.getEmail(), user.getName(), user.getPlan().name());
     }
 }

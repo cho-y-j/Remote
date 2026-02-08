@@ -39,6 +39,7 @@ export interface AuthResponse {
   refreshToken: string
   email: string
   name: string
+  plan: string
 }
 
 export interface SessionResponse {

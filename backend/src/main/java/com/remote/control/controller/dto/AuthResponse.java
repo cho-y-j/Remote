@@ -4,5 +4,6 @@ public record AuthResponse(
         String accessToken,
         String refreshToken,
         String email,
-        String name
+        String name,
+        String plan
 ) {}

@@ -36,8 +36,8 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const result = await authApi.googleLogin({ idToken: response.credential })
-      const { accessToken, email: userEmail, name } = result.data
-      login(userEmail, name || '', accessToken)
+      const { accessToken, email: userEmail, name, plan } = result.data
+      login(userEmail, name || '', accessToken, plan || 'FREE')
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.message || 'Google 로그인에 실패했습니다')
@@ -75,8 +75,8 @@ export default function LoginPage() {
 
     try {
       const response = await authApi.login({ email, password })
-      const { accessToken, email: userEmail, name } = response.data
-      login(userEmail, name || '', accessToken)
+      const { accessToken, email: userEmail, name, plan } = response.data
+      login(userEmail, name || '', accessToken, plan || 'FREE')
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.message || '로그인에 실패했습니다')

@@ -71,7 +71,7 @@ public class User implements UserDetails {
     }
 
     public enum Plan {
-        FREE, PRO, ENTERPRISE
+        FREE, PRO, BUSINESS
     }
 
     // UserDetails implementation

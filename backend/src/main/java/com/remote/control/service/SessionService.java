@@ -4,6 +4,7 @@ import com.remote.control.controller.dto.SessionCreateRequest;
 import com.remote.control.controller.dto.SessionResponse;
 import com.remote.control.model.Device;
 import com.remote.control.model.Session;
+import com.remote.control.model.User;
 import com.remote.control.repository.DeviceRepository;
 import com.remote.control.repository.SessionRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +23,30 @@ public class SessionService {
 
     private final SessionRepository sessionRepository;
     private final DeviceRepository deviceRepository;
+    private final PlanLimitService planLimitService;
     private static final SecureRandom RANDOM = new SecureRandom();
 
     @Transactional
     public SessionResponse createSession(SessionCreateRequest request) {
         Device hostDevice = deviceRepository.findByDeviceId(request.hostDeviceId())
                 .orElseThrow(() -> new IllegalArgumentException("Host device not found"));
+
+        // Check concurrent session limit
+        User user = hostDevice.getUser();
+        if (user != null) {
+            List<Session> activeSessions = sessionRepository.findActiveSessionsByDevice(hostDevice);
+            int totalActive = sessionRepository.findAllActiveSessions().stream()
+                    .filter(s -> (s.getHostDevice() != null && s.getHostDevice().getUser() != null
+                            && s.getHostDevice().getUser().getId().equals(user.getId()))
+                            || (s.getClientDevice() != null && s.getClientDevice().getUser() != null
+                            && s.getClientDevice().getUser().getId().equals(user.getId())))
+                    .toList().size();
+            int maxSessions = planLimitService.getMaxConcurrentSessions(user.getPlan());
+            if (totalActive >= maxSessions) {
+                throw new IllegalStateException(
+                        "동시 세션 한도 초과 (최대 " + maxSessions + "세션). 업그레이드가 필요합니다.");
+            }
+        }
 
         String sessionCode = generateSessionCode();
 
