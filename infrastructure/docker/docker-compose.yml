@@ -76,6 +76,8 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - TOSS_SECRET_KEY=${TOSS_SECRET_KEY:-}
+      - TOSS_CLIENT_KEY=${TOSS_CLIENT_KEY:-}
     depends_on:
       - postgres
       - redis

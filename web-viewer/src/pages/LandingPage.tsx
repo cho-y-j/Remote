@@ -430,7 +430,7 @@ export default function LandingPage() {
                 </div>
 
                 <a
-                  href="/signup"
+                  href={plan.price === '0' ? '/signup' : '/pricing'}
                   className={`block w-full py-3 rounded-xl font-semibold text-sm transition-all text-center ${
                     plan.highlight
                       ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40 hover:-translate-y-0.5'

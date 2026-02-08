@@ -74,6 +74,49 @@ export const authApi = {
     api.post<AuthResponse>('/auth/google', data),
 }
 
+export interface SubscriptionResponse {
+  id: string
+  plan: string
+  status: string
+  billingCycle: string
+  amount: number
+  currentPeriodStart: string
+  currentPeriodEnd: string
+  cancelledAt: string | null
+  createdAt: string
+}
+
+export interface PaymentHistoryResponse {
+  id: string
+  orderId: string
+  amount: number
+  status: string
+  orderName: string
+  paidAt: string
+  createdAt: string
+}
+
+export interface BillingAuthRequest {
+  authKey: string
+  customerKey: string
+  plan: string
+  billingCycle: string
+}
+
+export const paymentApi = {
+  subscribe: (data: BillingAuthRequest) =>
+    api.post<SubscriptionResponse>('/payments/subscribe', data),
+
+  cancelSubscription: () =>
+    api.delete<SubscriptionResponse>('/payments/subscribe'),
+
+  getCurrentSubscription: () =>
+    api.get<SubscriptionResponse>('/payments/subscribe'),
+
+  getPaymentHistory: () =>
+    api.get<PaymentHistoryResponse[]>('/payments/history'),
+}
+
 export const sessionApi = {
   getActiveSessions: () =>
     api.get<SessionResponse[]>('/sessions/active'),
