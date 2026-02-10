@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 const sections = [
   { id: 'download', label: '다운로드' },
   { id: 'android', label: 'Android 설치' },
+  { id: 'ios', label: 'iOS 설치' },
   { id: 'pc', label: 'PC 설치' },
   { id: 'connect', label: '원격 연결' },
   { id: 'usage', label: '상세 사용법' },
@@ -51,7 +52,7 @@ const platforms = [
   },
   {
     name: 'iOS',
-    desc: 'IPA 파일',
+    desc: '원격 제어 전용 (iPad/iPhone)',
     href: '/downloads/ios',
     icon: (
       <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
@@ -98,6 +99,23 @@ const faqItems = [
       '원격 PC의 입력 언어가 한국어로 설정되어 있는지 확인하세요.',
       'Caps Lock 키 또는 Ctrl+Space로 한/영 전환을 시도하세요.',
       '툴바의 Fn 버튼에서 한/영 전환 키를 찾아 사용할 수 있습니다.',
+    ],
+  },
+  {
+    q: 'iOS에서 화면 공유 메뉴가 없어요',
+    a: [
+      'iOS/iPadOS 앱은 다른 기기를 원격 제어하는 전용 앱입니다.',
+      'Apple 보안 정책으로 인해 iPhone/iPad 화면을 다른 기기에서 보거나 제어하는 것은 불가능합니다.',
+      '화면 공유(원격 제어 받기)가 필요하면 Android, Windows, macOS 기기를 사용하세요.',
+    ],
+  },
+  {
+    q: 'iOS 앱이 "신뢰하지 않는 개발자"라고 나와요',
+    a: [
+      '설정 → 일반 → VPN 및 기기 관리로 이동하세요.',
+      '개발자 앱 목록에서 해당 Apple ID를 탭합니다.',
+      '"신뢰" 버튼을 눌러 개발자 프로필을 승인합니다.',
+      '이후 앱을 다시 실행하면 정상적으로 열립니다.',
     ],
   },
   {
@@ -269,8 +287,83 @@ const InstallGuidePage: React.FC = () => {
         </div>
       </section>
 
+      {/* iOS Install Guide */}
+      <section id="ios" className="py-16 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-base text-gray-800 font-semibold tracking-wide uppercase">iOS / iPadOS</h2>
+            <p className="mt-2 text-3xl font-extrabold text-gray-900">iOS 설치 가이드</p>
+          </div>
+
+          {/* iOS Notice */}
+          <div className="mb-8 bg-amber-50 border border-amber-200 rounded-xl p-5">
+            <div className="flex items-start gap-3">
+              <svg className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h4 className="font-bold text-amber-800">iOS 버전 안내</h4>
+                <p className="mt-1 text-sm text-amber-700">
+                  iOS/iPadOS 앱은 <strong>다른 기기를 원격 제어하는 용도</strong>로만 사용 가능합니다.
+                  Apple 보안 정책으로 인해 iPhone/iPad 화면을 다른 기기에서 제어하는 기능은 지원되지 않습니다.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-3 text-xs">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-medium">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    PC/Mac/Android 원격 제어
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-medium">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    파일 전송
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-100 text-red-600 font-medium">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    내 화면 공유 불가
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 1 - Install */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center font-bold text-sm">1</span>
+              <h3 className="text-xl font-bold text-gray-900">앱 설치</h3>
+            </div>
+            <div className="ml-11 bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <ol className="space-y-3 text-gray-600">
+                <li className="flex gap-3"><span className="text-gray-800 font-semibold">1.</span> 위 다운로드 버튼으로 IPA 파일을 다운로드합니다.</li>
+                <li className="flex gap-3"><span className="text-gray-800 font-semibold">2.</span> <strong className="text-gray-900">AltStore</strong> 또는 <strong className="text-gray-900">Sideloadly</strong> 등의 사이드로딩 도구로 설치합니다.</li>
+                <li className="flex gap-3"><span className="text-gray-800 font-semibold">3.</span> 또는 Mac에서 <strong className="text-gray-900">Xcode</strong>로 직접 빌드하여 설치할 수 있습니다.</li>
+              </ol>
+              <div className="mt-4 bg-gray-50 rounded-lg p-4 text-sm text-gray-500">
+                <strong className="text-gray-700">참고:</strong> iOS 앱은 App Store 배포가 아닌 사이드로딩 방식으로 설치됩니다.
+                설치 후 <strong>설정 → 일반 → VPN 및 기기 관리</strong>에서 개발자 프로필을 신뢰해야 합니다.
+              </div>
+            </div>
+          </div>
+
+          {/* Step 2 - Use */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center font-bold text-sm">2</span>
+              <h3 className="text-xl font-bold text-gray-900">원격 제어 시작</h3>
+            </div>
+            <div className="ml-11 bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <ol className="space-y-3 text-gray-600">
+                <li className="flex gap-3"><span className="text-gray-800 font-semibold">1.</span> DeskOn 앱을 실행합니다.</li>
+                <li className="flex gap-3"><span className="text-gray-800 font-semibold">2.</span> 제어할 상대방의 <strong className="text-gray-900">9자리 ID</strong>를 입력합니다.</li>
+                <li className="flex gap-3"><span className="text-gray-800 font-semibold">3.</span> <strong className="text-gray-900">연결</strong> 버튼을 눌러 원격 제어를 시작합니다.</li>
+                <li className="flex gap-3"><span className="text-gray-800 font-semibold">4.</span> 터치로 마우스 조작, 키보드 입력, 파일 전송이 가능합니다.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* PC Install Guide */}
-      <section id="pc" className="py-16 bg-white">
+      <section id="pc" className="py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-base text-blue-600 font-semibold tracking-wide uppercase">Desktop</h2>
