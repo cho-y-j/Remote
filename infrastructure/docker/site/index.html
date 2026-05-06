@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DeskOn 다운로드</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #0f1216;
+    --panel: #161b22;
+    --panel-2: #1f242c;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #4a90d9;
+    --accent-hover: #5fa3eb;
+    --border: #2d333b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+      "Noto Sans KR", "Pretendard", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 64px 24px; }
+  h1 { font-size: 2rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin: 0 0 40px; }
+  .recommended {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+  .recommended .label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .recommended .title { font-size: 1.2rem; font-weight: 600; margin-bottom: 16px; }
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  .btn:hover { background: var(--accent-hover); }
+  .btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn.secondary:hover { background: var(--panel-2); border-color: var(--muted); }
+
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h3 { margin: 0 0 4px; font-size: 1.05rem; }
+  .card p.os-sub { margin: 0 0 16px; color: var(--muted); font-size: 0.85rem; }
+  .card .links { display: flex; flex-direction: column; gap: 8px; }
+  .card a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+  .card a:hover { text-decoration: underline; }
+
+  h2 { margin: 48px 0 16px; font-size: 1.3rem; }
+  details {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-top: 24px;
+  }
+  details summary { cursor: pointer; color: var(--muted); }
+  details code {
+    background: var(--panel-2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  details p { font-size: 0.9rem; color: var(--muted); margin: 8px 0; }
+  footer { margin-top: 64px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>DeskOn 다운로드</h1>
+  <p class="sub">
+    사용 중인 기기에 맞는 파일을 받아 설치하세요. 서버 주소는 자동으로 설정됩니다.<br>
+    <a href="guide.html" style="color:var(--accent); text-decoration:none">설치/사용 가이드 보기 →</a>
+  </p>
+
+  <div class="recommended" id="recommended" style="display:none">
+    <div class="label">현재 기기 추천</div>
+    <div class="title" id="recTitle"></div>
+    <a class="btn" id="recLink" href="#">다운로드</a>
+  </div>
+
+  <h2>플랫폼별</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Windows</h3>
+      <p class="os-sub">Windows 10 / 11 (64-bit)</p>
+      <div class="links">
+        <a href="files/rustdesk-1.4.5-x86_64.exe" data-os="win">설치 프로그램 (.exe)</a>
+        <a href="files/rustdesk-1.4.5-x86_64.msi">MSI 패키지 (.msi)</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>macOS</h3>
+      <p class="os-sub">macOS 11 이상</p>
+      <div class="links">
+        <a href="files/rustdesk-1.4.5-aarch64-aarch64.dmg" data-os="mac-arm">Apple Silicon (M1/M2/M3)</a>
+        <a href="files/rustdesk-1.4.5-x86_64-x86_64.dmg" data-os="mac-intel">Intel 칩</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Android</h3>
+      <p class="os-sub">Android 7 이상</p>
+      <div class="links">
+        <a href="files/rustdesk-1.4.5-universal.apk" data-os="android">APK 다운로드</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>iOS</h3>
+      <p class="os-sub">App Store 등록 예정</p>
+      <div class="links">
+        <span style="color:var(--muted); font-size:0.9rem">준비 중</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Linux</h3>
+      <p class="os-sub">Debian/Ubuntu, Fedora/RHEL</p>
+      <div class="links">
+        <a href="files/rustdesk-1.4.5-x86_64.deb" data-os="linux">.deb (x86_64)</a>
+        <a href="files/rustdesk-1.4.5-0.x86_64.rpm">.rpm (x86_64)</a>
+        <a href="files/rustdesk-1.4.5-x86_64.AppImage">AppImage</a>
+      </div>
+    </div>
+  </div>
+
+  <h2>설치 후</h2>
+  <p style="color:var(--muted)">
+    앱을 실행하면 자동으로 자체 서버에 연결되고, 화면에 9자리 ID가 표시됩니다.
+    <br>그 ID와 비밀번호를 상대에게 알려주면 원격 접속이 시작됩니다.
+    <br>자세한 단계는 <a href="guide.html" style="color:var(--accent)">사용 가이드</a>를 참고하세요.
+  </p>
+
+  <details>
+    <summary>고급: 서버 정보</summary>
+    <p>설치 후 앱을 실행하면 자동으로 자체 서버에 연결됩니다.</p>
+    <p>서버 주소: <code>1.221.158.115</code></p>
+    <p>키: <code>OmVNIrM8E5MZDQaaE6nZ4gyQA4aUPa5R6jdZWQd0QAk=</code></p>
+  </details>
+</div>
+
+<footer>DeskOn · self-hosted</footer>
+
+<script>
+  (function () {
+    var ua = navigator.userAgent;
+    var p = navigator.platform || "";
+    var rec = null;
+
+    if (/Android/i.test(ua)) rec = { title: "Android (APK)", href: "files/rustdesk-1.4.5-universal.apk" };
+    else if (/iPhone|iPad|iPod/i.test(ua)) rec = { title: "iOS — 준비 중", href: null };
+    else if (/Win/i.test(p)) rec = { title: "Windows (.exe)", href: "files/rustdesk-1.4.5-x86_64.exe" };
+    else if (/Mac/i.test(p)) {
+      var arm = /arm|aarch/i.test(ua) || (navigator.userAgentData && navigator.userAgentData.platform === "macOS" && /arm/i.test(ua));
+      rec = arm
+        ? { title: "macOS (Apple Silicon)", href: "files/rustdesk-1.4.5-aarch64-aarch64.dmg" }
+        : { title: "macOS — Apple Silicon이면 위 카드에서 선택, Intel은 아래 링크", href: "files/rustdesk-1.4.5-x86_64-x86_64.dmg" };
+    } else if (/Linux/i.test(p)) rec = { title: "Linux (.deb)", href: "files/rustdesk-1.4.5-x86_64.deb" };
+
+    if (rec && rec.href) {
+      document.getElementById("recommended").style.display = "block";
+      document.getElementById("recTitle").textContent = rec.title;
+      document.getElementById("recLink").href = rec.href;
+    }
+  })();
+</script>
+</body>
+</html>

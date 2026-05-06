@@ -1,0 +1,33 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Server runtime data (keys, sqlite, logs)
+infrastructure/docker/data/
+
+# Distributed binaries — fetched from cho-y-j/rustdesk releases
+infrastructure/docker/site/files/
+
+# Backups (kept locally for reference, not committed)
+infrastructure/docker/*.bak
+infrastructure/docker/*.full.yml.bak
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

@@ -1,0 +1,28 @@
+services:
+  hbbs:
+    image: rustdesk/rustdesk-server:latest
+    container_name: hbbs
+    command: hbbs -r 1.221.158.115:21117
+    network_mode: host
+    volumes:
+      - ./data:/root
+    restart: unless-stopped
+
+  hbbr:
+    image: rustdesk/rustdesk-server:latest
+    container_name: hbbr
+    command: hbbr
+    network_mode: host
+    volumes:
+      - ./data:/root
+    restart: unless-stopped
+
+  download-site:
+    image: nginx:alpine
+    container_name: deskon-download
+    ports:
+      - "8080:80"
+    volumes:
+      - ./site:/usr/share/nginx/html:ro
+      - ./nginx-download.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
